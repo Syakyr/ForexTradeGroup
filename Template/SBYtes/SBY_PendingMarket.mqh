@@ -4,13 +4,24 @@
 //|                   Pending Orders Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
-// TODO: Add dependancies comment notes to indicate the links between functions
-// TODO: Give a short description on each of the include files and how to use them
+// This is the pending orders module for the SmartBYtes template. 
 
 #property copyright "Copyright 2016, SmartBYtes"
 #property strict
-#property version "1.00"
+#property version "1.01"
 #include <SBYtes/SBY_Main.mqh>
+
+/* 
+
+v1.0: 
+- Adapted from the Falcon template by Lucas Liew 
+  (https://github.com/Lucas170/The-Falcon).
+
+v1.01:
+- Added new comments to describe what each template-
+  defined function does
+
+*/
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //|                     FUNCTIONS LIBRARY                                   

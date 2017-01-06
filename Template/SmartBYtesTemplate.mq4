@@ -1,72 +1,76 @@
 //+------------------------------------------------------------------+
-//|                                      SmartBYtes EA Template v1.0 |
-//|                                       Copyright 2016, SmartBYtes |
-//|                 Adapted from Lucas Liew, Black Algo Technologies |
+//|                                     SmartBYtes EA Template v1.01 |
+//|                                       Copyright 2017, SmartBYtes |
+//|                                                                  |
 //+------------------------------------------------------------------+
 
-// TODO: Add dependancies comment notes to indicate the links between functions
-// TODO: Give a short description on each of the include files and how to use them
-
-#property copyright "Copyright 2016, SmartBYtes"
-#property version   "1.00"
-//#property link      ""
+#property copyright "Copyright 2017, SmartBYtes"
+#property version   "1.01"
+#property link      "https://github.com/Hitlaris/ForexTradeGroup"
+#include <SBYtes/SBY_Main.mqh> // Main include file
 
 /* 
 
-SmartBYtes v1.0: 
-- Adapted from the Falcon template by Lucas Liew, 
+v1.00: 
+- Adapted from the Falcon template by Lucas Liew 
+  (https://github.com/Lucas170/The-Falcon), 
   making the template more modular so as to reduce 
   the final filesize to use.
+
+v1.01:
+- Added new comments to describe what each template-
+  defined function does
+- Rewritten to show MA crossover tutorial
 
 */
 
 //+------------------------------------------------------------------+
 //| Setup                                                            |
 //+------------------------------------------------------------------+
-extern string  TradingRulesHeader="----------Trading Rules Variables-----------";
-extern int     FastMAPeriod=10;
-extern int     SlowMAPeriod=50;
-extern int     KeltnerPeriod=15;
-extern int     KeltnerMulti=3;
+extern string  TradingRulesHeader="----------Trading Rules Variables-----------";   //.
+extern int     FastMAPeriod=10;        //Fast MA Period
+extern int     SlowMAPeriod=50;        //Slow MA Period
+extern ENUM_TF TimeFrame=TF_H1;        //MA Timeframe
+extern ENUM_MA_METHOD MAType=MODE_SMA; //MA Type
 
 //+------------------------------------------------------------------+
 //| Include Files                                                    |
 //+------------------------------------------------------------------+
 // To include whatever that is needed for the strategy
 
-#include <SBYtes/SBY_Main.mqh>
-#include <SBYtes/SBY_VolGen.mqh>
+#include <SBYtes/SBY_VolGen.mqh>                // General Volatility Settings
 
-#include <SBYtes/SBY_TPSL.mqh>
-#include <SBYtes/SBY_TPSLHidden.mqh>
+#include <SBYtes/SBY_TPSL.mqh>                  // Hard TP/SL Settings
+#include <SBYtes/SBY_VolTPSL.mqh>               // Hard Volatility TP/SL Settings
+#include <SBYtes/SBY_TPSLHidden.mqh>            // Hidden TP/SL Settings
+#include <SBYtes/SBY_VolTPSLHidden.mqh>         // Hidden Volatility TP/SL Settings
 
-#include <SBYtes/SBY_OpenMarket.mqh>
-#include <SBYtes/SBY_PendingMarket.mqh>
+#include <SBYtes/SBY_OpenMarket.mqh>            // Instant Execution Order Settings
+#include <SBYtes/SBY_PendingMarket.mqh>         // Pending Order Settings
 
-#include <SBYtes/SBY_BEStop.mqh>
-#include <SBYtes/SBY_BEStopHidden.mqh>
-#include <SBYtes/SBY_TrailStop.mqh>
-#include <SBYtes/SBY_TrailStopHidden.mqh>
-#include <SBYtes/SBY_VolTrailStop.mqh>
-#include <SBYtes/SBY_VolTrailStopHidden.mqh>
+#include <SBYtes/SBY_BEStop.mqh>                // Breakeven Stop Settings
+#include <SBYtes/SBY_BEStopHidden.mqh>          // Hidden Breakeven Stop Settings
+#include <SBYtes/SBY_TrailStop.mqh>             // Trailing Stop Settings
+#include <SBYtes/SBY_TrailStopHidden.mqh>       // Hidden Trailing Stop Settings
+#include <SBYtes/SBY_VolTrailStop.mqh>          // Volatility Trailing Stop Settings
+#include <SBYtes/SBY_VolTrailStopHidden.mqh>    // Hidden Volatility Trailing Stop Settings
 
 //----------Service Variables-----------//
 
 // Trading Rules Service Variables
 // Change this as you see fit.
-double FastMA1, SlowMA1, Price1;
-double KeltnerUpper1, KeltnerLower1;
-int    CrossTrigArraySize = 3;       // Number of variables which looks for crosses
+double FastMA1, SlowMA1;
 
-int OrderNumber;
+int CrossTrigArraySize = 1;         // Number of variables which looks for crosses
+int OrderNumber;                    // Variable to store order number for error checking
 
 //+------------------------------------------------------------------+
 //| Expert Initialization                                            |
 //+------------------------------------------------------------------+
 int init(){
    
-   MainInitialise();
-   CrossInitialise(CrossTrigArraySize);
+   MainInitialise();                      // Checking if the account is 4/5 digit broker, and whether it is running on a Yen pair
+   CrossInitialise(CrossTrigArraySize);   // Initialises the number of crosses used defined by CrossTrigArraySize
 
 //----------(Hidden) TP, SL and Breakeven Stops Variables-----------  
 
@@ -105,23 +109,18 @@ int start(){
 //----------Entry & Exit Variables-----------
    
    // Assigning Values to Variables
-   FastMA1=iMA(Symbol(),Period(),FastMAPeriod,0, MODE_SMA, PRICE_CLOSE,1); // Shift 1
-   SlowMA1=iMA(Symbol(),Period(),SlowMAPeriod,0, MODE_SMA, PRICE_CLOSE,1); // Shift 1
-   KeltnerUpper1 = iCustom(NULL, 0, "Keltner_Channels", KeltnerPeriod, 0, 0, KeltnerPeriod, KeltnerMulti, True, 0, 1); // Shift 1
-   KeltnerLower1 = iCustom(NULL, 0, "Keltner_Channels", KeltnerPeriod, 0, 0, KeltnerPeriod, KeltnerMulti, True, 2, 1); // Shift 1
+   FastMA1=iMA(Symbol(),TimeFrame,FastMAPeriod,0, MAType, PRICE_CLOSE,1);
+   SlowMA1=iMA(Symbol(),TimeFrame,SlowMAPeriod,0, MAType, PRICE_CLOSE,1);
    
    // Use CrossTriggered array variable to store crossing signals
    // Change CrossTrigArraySize variable to store more crossing signals
    CrossTriggered[0]=Crossed(0,FastMA1,SlowMA1);
-   CrossTriggered[1]=Crossed(1,Ask,KeltnerUpper1);
-   CrossTriggered[2]=Crossed(2,Bid,KeltnerLower1);
-
+   
 //----------TP, SL, Breakeven and Trailing Stops Variables-----------
    
-   // Comment this variable out if you do not use ATR values
-   myATR=iATR(NULL,Period(),atr_period,1);
-   
-   InitialiseHardTPSL();      // If SBY_TPSL.mqh is activated
+   GetMyATR();                // If SBY_VolGen.mqh is activated
+   //InitialiseHardTPSL();      // If SBY_TPSL.mqh is activated (Turn off is SBY_VolTPSL.mqh is activated)
+   InitialiseVolTPSL();       // If SBY_VolTPSL.mqh is activated
    BreakevenStopAll();        // If SBY_BEStops.mqh is activated
    TrailingStopAll();         // If SBY_Trailstop.mqh is activated
    InitialiseVolTrailStop();  // If SBY_VolTrailStop.mqh is activated
@@ -135,18 +134,21 @@ int start(){
    // If SBY_BEStopsHidden.mqh is activated
    if(UseHiddenBreakevenStops){ UpdateHiddenBEList(); SetAndTriggerBEHidden(); }
    
+   // If SBY_TrailStopHidden.mqh is activated
    if(UseHiddenTrailingStops){ UpdateHiddenTrailingList(); SetAndTriggerHiddenTrailing(); }
+
+   // If SBY_VolTrailStopHidden.mqh is activated
    if(UseHiddenVolTrailing){ UpdateHiddenVolTrailingList(); TriggerAndReviewHiddenVolTrailing(); }
 
 //----------Exit Rules (All Opened Positions)-----------
 
    // Modify the ExitSignal() function to suit your needs.
 
-   if(CountPosOrders(OP_BUY)>=1 && ExitSignal(CrossTriggered[2])==2){ 
+   if(CountPosOrders(OP_BUY)>=1 && ExitSignal(CrossTriggered[0])==2){ 
       // Close Long Positions
       CloseOrderPosition(OP_BUY); 
    }
-   if(CountPosOrders(OP_SELL)>=1 && ExitSignal(CrossTriggered[1])==1){ 
+   if(CountPosOrders(OP_SELL)>=1 && ExitSignal(CrossTriggered[0])==1){ 
       // Close Short Positions
       CloseOrderPosition(OP_SELL);
    }
@@ -157,50 +159,32 @@ int start(){
       !IsMaxPositionsReached() 
       && !IsVolLimitBreached() // If SBY_VolGen.mqh is activated
       ){
-            
-      if(EntrySignal(CrossTriggered[0])==1){
-         
-         // Open Long Positions
-         OrderNumber=OpenPositionMarket(OP_BUY,Stop,Take);
+      
+      if(EntrySignal(CrossTriggered[0])>0){
+         int TYPE=0;
+         if(EntrySignal(CrossTriggered[0])==1) TYPE = OP_BUY;
+         if(EntrySignal(CrossTriggered[0])==2) TYPE = OP_SELL;
+
+         // Open Positions
+         OrderNumber=OpenPositionMarket(TYPE,Stop,Take);
    
          // If SBY_TPSLHidden.mqh is activated
          // Set Stop Loss and Take Profit value for Hidden SL/TP
-         SetStopLossHidden(OrderNumber);
-         SetTakeProfitHidden(OrderNumber);
+         // Disable if SBY_VolTPSLHidden.mqh is also activated
+         //SetStopLossHidden(OrderNumber);
+         //SetTakeProfitHidden(OrderNumber);
+         
+         // If SBY_TPSLHidden.mqh is activated
+         SetVolStopLossHidden(OrderNumber);
+         SetVolTakeProfitHidden(OrderNumber);
          
          // Set Volatility Trailing Stop Level           
          SetVolTrailingStop(OrderNumber);
          
          // Set Hidden Volatility Trailing Stop Level 
-         if(UseHiddenVolTrailing) SetHiddenVolTrailing(OrderNumber);
-       
-      }
-   
-      if(EntrySignal(CrossTriggered[0])==2){ 
-         
-         // Open Short Positions
-         OrderNumber=OpenPositionMarket(OP_SELL,Stop,Take);
-         
-         // If SBY_TPSLHidden.mqh is activated
-         // Set Stop Loss and Take Profit value for Hidden SL/TP
-         SetStopLossHidden(OrderNumber);
-         SetTakeProfitHidden(OrderNumber);
-         
-         // Set Volatility Trailing Stop Level 
-         SetVolTrailingStop(OrderNumber);
-          
-         // Set Hidden Volatility Trailing Stop Level  
-         if(UseHiddenVolTrailing) SetHiddenVolTrailing(OrderNumber);
-       
+         SetHiddenVolTrailing(OrderNumber);
       }
    }
-
-//----------Pending Order Management-----------
-/*
-        Not Applicable (See Desiree for example of pending order rules).
-   */
-
-//----
 
    return(0);
 }

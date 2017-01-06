@@ -4,25 +4,42 @@
 //|     General Volatility Variables Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
-// TODO: Add dependancies comment notes to indicate the links between functions
-// TODO: Give a short description on each of the include files and how to use them
+// This is the general volatility module for the SmartBYtes Template. 
+// It must be included in any SmartBYtes Template files if volatility
+// is used.
 
 #property copyright "Copyright 2016, SmartBYtes"
 #property strict
-#property version "1.00"
+#property version "1.01"
 #include <SBYtes/SBY_Main.mqh>
+
+/* 
+
+v1.0: 
+- Adapted from the Falcon template by Lucas Liew 
+  (https://github.com/Lucas170/The-Falcon).
+
+v1.01:
+- Added new comments to describe what each template-
+  defined function does
+
+*/
 
 //+------------------------------------------------------------------+
 //| Setup                                                            |
 //+------------------------------------------------------------------+
 
-extern string  MaxVolHeader="----------Set Max Volatility Limit-----------";
-extern bool    IsVolLimitActivated=False;
-extern double  VolatilityMultiplier=3; // In units of ATR
-extern int     ATRTimeframe=60; // In minutes
-extern int     ATRPeriod=14;
+extern string  VolMeasHeader="----------Volatility Measurement Settings-----------"; //.
+extern ENUM_TF atr_timeframe=TF_Curr;        //ATR Timeframe
+extern int     atr_period=14;                //ATR Period
 
-//----------Errors Handling Settings-----------//
+extern string  MaxVolHeader="----------Set Max Volatility Limit-----------";
+extern bool    IsVolLimitActivated=False;    // Volatility Limit?
+extern double  VolatilityMultiplier=3;       // In units of ATR
+extern ENUM_TF MaxATRTimeframe=TF_H1;        // Max ATR Timeframe
+extern int     MaxATRPeriod=14;              // Max ATR Period
+
+double myATR;
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //|                     FUNCTIONS LIBRARY                                   
@@ -31,14 +48,8 @@ extern int     ATRPeriod=14;
 /*
 
 Content:
-1) MainInitialise
-2) GetP
-3) GetYenAdjustFactor
-4) CrossInitialise
-5) Crossed
-6) CountPosOrders
-7) IsMaxOrdersReached
-8) Set
+   1) IsVolLimitBreached
+   2) GetMyATR
 
 */
 
@@ -60,10 +71,21 @@ bool IsVolLimitBreached(){
    if(IsVolLimitActivated==False) return(output);
    
    double priceMovement = MathAbs(Bid-iClose(NULL,PERIOD_M1,1)); // Not much difference if we use bid or ask prices here. We can also use iOpen at shift 0 here, it will be similar to using iClose at shift 1.
-   double VolATR = iATR(NULL, ATRTimeframe, ATRPeriod, 1);
+   double VolATR = iATR(NULL, MaxATRTimeframe, MaxATRPeriod, 1);
    
    if(priceMovement > VolatilityMultiplier*VolATR) output = True;
 
    return(output);
   }
 
+//+------------------------------------------------------------------+
+//| Retrieve ATR Value                                               |
+//+------------------------------------------------------------------+
+// Type: Fixed Template 
+// Do not edit unless you know what you're doing
+
+// This function retrieves the current ATR value
+
+void GetMyATR(){
+   myATR=iATR(Symbol(),atr_timeframe,atr_period,1);
+}

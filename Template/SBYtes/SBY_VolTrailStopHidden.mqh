@@ -4,27 +4,40 @@
 //|  Hidden Volatility Trailing Stop Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
-// TODO: Add dependancies comment notes to indicate the links between functions
-// TODO: Give a short description on each of the include files and how to use them
-// TODO: Break its dependency towards volatility and set it to accept custom-calculated TP/SL levels
+// This is the hidden volatility trailing stop module for the SmartBYtes 
+// template. 
 
 #property copyright "Copyright 2016, SmartBYtes"
 #property strict
-#property version "1.00"
+#property version "1.01"
 #include <SBYtes/SBY_Main.mqh>
+#include <SBYtes/SBY_VolGen.mqh>
+
+/* 
+
+v1.0: 
+- Adapted from the Falcon template by Lucas Liew 
+  (https://github.com/Lucas170/The-Falcon).
+
+v1.01:
+- Added new comments to describe what each template-
+  defined function does
+
+*/
 
 //+------------------------------------------------------------------+
 //| Setup                                                            |
 //+------------------------------------------------------------------+
-extern string  VolTrailStopsHidHeader="----------Hidden Volatility Trailing Stops Settings-----------";
-extern bool    UseHiddenVolTrailing=False;
-extern double  VolTrailingDistMultiplier_Hidden=0; // In units of ATR
-extern double  VolTrailingBuffMultiplier_Hidden=0; // In units of ATR
+extern string  VolTrailStopsHidHeader="----------Hidden Volatility Trailing Stops Settings-----------"; //.
+extern bool    UseHiddenVolTrailing=False;         // Hidden Vol Trail Stop?
+extern double  VolTrailingDistMultiplier_Hidden=0; // Hidden Trail Distance ATR Multiplier
+extern double  VolTrailingBuffMultiplier_Hidden=0; // Hidden Trail Buffer ATR Multiplier
 
 
 //----------Service Variables-----------//
 
-double HiddenVolTrailingList[][3]; // First dimension is for position ticket numbers, second is for the hidden trailing stop levels, third is for recording of volatility amount (one unit of ATR) at the time of trade
+double HiddenVolTrailingList[][3]; // First dimension is for position ticket numbers, second is for the hidden trailing stop levels, 
+                                   // third is for recording of volatility amount (one unit of ATR) at the time of trade
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //|                     FUNCTIONS LIBRARY                                   
@@ -33,7 +46,9 @@ double HiddenVolTrailingList[][3]; // First dimension is for position ticket num
 /*
 
 Content:
-   1) 
+   1) UpdateHiddenVolTrailingList
+   2) SetHiddenVolTrailing
+   3) TriggerAndReviewHiddenVolTrailing
 
 */
 
@@ -89,32 +104,34 @@ void UpdateHiddenVolTrailingList(){
 
 void SetHiddenVolTrailing(int OrderNum){
 
-   double VolTrailingStopLevel=0;
-   double VolTrailingStopDist;
-
-   VolTrailingStopDist=VolTrailingDistMultiplier_Hidden*myATR/(P*Point); // Volatility trailing stop amount in Pips
-
-   if(OrderSelect(OrderNum,SELECT_BY_TICKET)==true && OrderSymbol()==Symbol() && 
-      OrderMagicNumber()==MagicNumber){
-      
-      RefreshRates();
-      if(OrderType()==OP_BUY)  
-         VolTrailingStopLevel = MathMax(Bid, OrderOpenPrice()) 
-                                - VolTrailingStopDist*P*Point; // Volatility trailing stop level of buy trades
-      if(OrderType()==OP_SELL) 
-         VolTrailingStopLevel = MathMin(Ask, OrderOpenPrice()) 
-                                + VolTrailingStopDist*P*Point; // Volatility trailing stop level of sell trades
-   }
-
-   for(int x=0; x<ArrayRange(HiddenVolTrailingList,0); x++){ // Loop through elements in HiddenVolTrailingList
-      if(HiddenVolTrailingList[x,0]==0){  // Checks if the element is empty
-         HiddenVolTrailingList[x,0] = OrderNum; // Add order number
-         HiddenVolTrailingList[x,1] = VolTrailingStopLevel; // Add volatility trailing stop level 
-         HiddenVolTrailingList[x,2] = myATR/(P*Point); // Add volatility measure aka 1 unit of ATR
-         if(OnJournaling) Print("EA Journaling: Order "+(string)HiddenVolTrailingList[x,0]+
-                                " assigned with a hidden volatility trailing stop level of "+
-                                (string)NormalizeDouble(HiddenVolTrailingList[x,1],Digits)+".");
-         break;
+   if(UseHiddenVolTrailing){
+      double VolTrailingStopLevel=0;
+      double VolTrailingStopDist;
+   
+      VolTrailingStopDist=VolTrailingDistMultiplier_Hidden*myATR/(P*Point); // Volatility trailing stop amount in Pips
+   
+      if(OrderSelect(OrderNum,SELECT_BY_TICKET)==true && OrderSymbol()==Symbol() && 
+         OrderMagicNumber()==MagicNumber){
+         
+         RefreshRates();
+         if(OrderType()==OP_BUY)  
+            VolTrailingStopLevel = MathMax(Bid, OrderOpenPrice()) 
+                                   - VolTrailingStopDist*P*Point; // Volatility trailing stop level of buy trades
+         if(OrderType()==OP_SELL) 
+            VolTrailingStopLevel = MathMin(Ask, OrderOpenPrice()) 
+                                   + VolTrailingStopDist*P*Point; // Volatility trailing stop level of sell trades
+      }
+   
+      for(int x=0; x<ArrayRange(HiddenVolTrailingList,0); x++){ // Loop through elements in HiddenVolTrailingList
+         if(HiddenVolTrailingList[x,0]==0){  // Checks if the element is empty
+            HiddenVolTrailingList[x,0] = OrderNum; // Add order number
+            HiddenVolTrailingList[x,1] = VolTrailingStopLevel; // Add volatility trailing stop level 
+            HiddenVolTrailingList[x,2] = myATR/(P*Point); // Add volatility measure aka 1 unit of ATR
+            if(OnJournaling) Print("EA Journaling: Order "+(string)HiddenVolTrailingList[x,0]+
+                                   " assigned with a hidden volatility trailing stop level of "+
+                                   (string)NormalizeDouble(HiddenVolTrailingList[x,1],Digits)+".");
+            break;
+         }
       }
    }
 }

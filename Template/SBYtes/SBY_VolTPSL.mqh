@@ -1,31 +1,30 @@
 //+------------------------------------------------------------------+
-//|                                                     SBY_TPSL.mqh |
+//|                                                  SBY_VolTPSL.mqh |
 //|                                       Copyright 2016, SmartBYtes |
-//|                      Fixed TP/SL Library for SmartBYtes Template |
+//|           Fixed Volatility TP/SL Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
-// This is the fixed TP/SL module for the SmartBYtes template. Suitable
-// for 1 SL/TP level only. Deprecated due to inflexibility for multiple
-// SL/TP levels. Left as a template and for simple strategies that only
-// use 1 SL/TP level/pipsize.
+// This is the fixed volatility TP/SL module for the SmartBYtes template. 
+// Suitable for 1 SL/TP level only. Deprecated due to inflexibility for 
+// multiple SL/TP levels. Left as a template and for simple strategies 
+// that only use 1 SL/TP level/pipsize.
 
 #property copyright "Copyright 2016, SmartBYtes"
 #property strict
 #property version "1.01"
 #include <SBYtes/SBY_Main.mqh>
+#include <SBYtes/SBY_TPSL.mqh>
+#include <SBYtes/SBY_VolGen.mqh>
 
 /* 
 
 v1.00: 
 - Adapted from the Falcon template by Lucas Liew 
   (https://github.com/Lucas170/The-Falcon), 
-  for hard TP/SL settings
+  for hard volatility TP/SL settings
 
 v1.01:
-- Added new comments to describe what each template-
-  defined function does
-- Seperated volatility to SBY_VolTPSL.mqh
-
+- Branched off from TPSL module
 
 TODO:
 - Able to use functions to create multiple TP/SL levels
@@ -37,14 +36,11 @@ TODO:
 //| Setup                                                            |
 //+------------------------------------------------------------------+
 
-extern string  TPSLHeader="----------TP & SL Settings-----------"; //.
+extern string  VolTPSLHeader="----------Volatility TP & SL Settings-----------"; //.
+extern string  VolTPSLExplanation="If this is activated, SL/TP Pip variable changes to ATR Multiplier."; //.
 
-extern bool    UseFixedStopLoss=True;     // Fixed SL?
-extern double  HardSLVariable=6;          // Stop Loss Pips
-
-extern bool    UseFixedTakeProfit=True;   // Fixed TP?
-extern double  HardTPVariable=6;          // Take Profit Pips
-
+extern bool    IsVolatilityStopOn=True;         // Vol SL?
+extern bool    IsVolatilityTakeProfitOn=True;   // Vol TP?
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //|                     FUNCTIONS LIBRARY                                   
@@ -53,22 +49,24 @@ extern double  HardTPVariable=6;          // Take Profit Pips
 /*
 
 Content:
-1) InitialiseHardTPSL
+1) InitialiseVolTPSL
 
 */
 
 //+------------------------------------------------------------------+
-//| Initialise Hard TP and SL Levels                                 |
+//| Initialise Volatility TP and SL Levels                           |
 //+------------------------------------------------------------------+ 
 // Type: Fixed Template 
 // Do not edit unless you know what you're doing
 
-// This function initialises the TP and SL variables
+// This function initialises the volatility TP and SL variables
 
-void InitialiseHardTPSL(){
-   if(UseFixedStopLoss==False) Stop=0;
-   else Stop=HardSLVariable;
+void InitialiseVolTPSL(){
+   InitialiseHardTPSL();
+   if(IsVolatilityStopOn) 
+      Stop=HardSLVariable*myATR/(P*Point); // Stop Loss in Pips
 
-   if(UseFixedTakeProfit==False) Take=0;
-   else Take=HardTPVariable;
+   if(IsVolatilityTakeProfitOn) 
+      Take=HardTPVariable*myATR/(P*Point); // Take Profit in Pips
 }
+

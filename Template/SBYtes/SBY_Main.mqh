@@ -4,52 +4,70 @@
 //|                             Main Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
-// TODO: Add dependancies comment notes to indicate the links between functions
-// TODO: Give a short description on each of the include files and how to use them
+// This is the main module for the SmartBYtes Template, and must be 
+// included in any SmartBYtes Template files. It contains the essential
+// functions needed to make the template work.
 
 #property copyright "Copyright 2016, SmartBYtes"
 #property strict
-#property version "1.00"
+#property version "1.01"
+
+/* 
+
+v1.0: 
+- Adapted from the Falcon template by Lucas Liew 
+  (https://github.com/Lucas170/The-Falcon), 
+  putting only the essential functions in the main
+  module.
+
+v1.01:
+- Added new comments to describe what each template-
+  defined function does
+- Changed CheckLot function to follow CaptProt input
+  to set lotsize to 0 if calculated lotsize is less than
+  the minimum lots required by the broker so as to not
+  exceed the risk level being set
+- Fixed the bug when using Crossed functions
+
+TODO: Add email function
+*/
 
 //+------------------------------------------------------------------+
 //| Setup                                                            |
 //+------------------------------------------------------------------+
 
-extern string  PosHeader="----------Position Sizing Settings-----------";
-extern bool    IsSizingOn=True;
-extern double  Risk=1; // Risk per trade, or fixed lot-size 
+extern string  PosHeader="----------Position Sizing Settings-----------";  //.
+extern bool    IsSizingOn=True;              // Fractional Sizing?
+extern bool    CaptProt=True;                // Capital Protection?
+extern double  Risk=1;                       // Risk per trade, or fixed lot-size 
 
-extern string  VolMeasHeader="----------Volatility Measurement Settings-----------";
-extern int     atr_period=14;
+extern string  MaxOrdersHeader="----------Max Orders-----------"; //.
+extern int     MaxPositionsAllowed=1;        // Max Positions Allowed
 
-extern string  MaxOrdersHeader="----------Max Orders-----------";
-extern int     MaxPositionsAllowed=1;
+extern string  MaxLossHeader="----------Set Max Loss Limit-----------"; //.
+extern bool    IsLossLimitActivated=False;   // Loss Limit?
+extern double  LossLimitPercent=50;          // Loss Limit %
 
-extern string  MaxLossHeader="----------Set Max Loss Limit-----------";
-extern bool    IsLossLimitActivated=False;
-extern double  LossLimitPercent=50;
-
-extern string  EAGenHeader="----------EA General Settings-----------";
-extern int     MagicNumber=12345;
-extern int     Slippage=3; // In Pips
-extern bool    IsECNbroker = false; // Is your broker an ECN
-extern bool    OnJournaling = true; // Add EA updates in the Journal Tab
+extern string  EAGenHeader="----------EA General Settings-----------"; //.
+extern int     MagicNumber=12345;            // Magic Number
+extern int     Slippage=3;                   // Slippage Pips
+extern bool    IsECNbroker = false;          // ECN Broker?
+extern bool    OnJournaling = true;          // Journalling Log
 
 //----------Errors Handling Settings-----------//
 int    RetryInterval=100; // Pause Time before next retry (in milliseconds)
 int    MaxRetriesPerTick=10;
 
+
 // Service Variables for Crossing Signal
-int    CrossTriggered[];              
-int    CurrentDirection[];
-int    LastDirection[];
+int    CrossTriggered[], CurrentDirection[], LastDirection[];
 bool   FirstTime[];
 
 double P,YenPairAdjustFactor;
-double myATR;
-int MagicNo=MagicNumber;
+double Stop=0,Take=0;
 
 enum ENUM_TF {
+   TF_Curr=0,  //Current
    TF_M1=1,    //M1
    TF_M5=5,    //M5
    TF_M15=15,  //M15
@@ -70,15 +88,18 @@ Content:
    1) MainInitialise
    2) GetP
    3) GetYenAdjustFactor
-   4) GetLot
-   5) CrossInitialise
-   6) Crossed
-   7) CountPosOrders
-   8) IsMaxPositionsReached
-   9) CloseOrderPosition
-  10) IsLossLimitBreached
-  11) HandleTradingEnvironment
-  12) GetErrorDescription
+   4) PointToPip
+   5) GetLot
+   6) CheckLot
+   7) CrossInitialise
+   8) Crossed
+   9) CountPosOrders
+  10) IsMaxPositionsReached
+  11) CloseOrderPosition
+  12) IsLossLimitBreached
+  13) HandleTradingEnvironment
+  14) ErrorDescription
+
 */
 
 //+------------------------------------------------------------------+
@@ -102,8 +123,8 @@ void MainInitialise(){
 // This function returns P, which is used for converting pips to decimals/points
 
 // Some definitions: Pips vs Point
-// 1 pip = 0.0001 on a 4 digit broker and 0.00010 on a 5 digit broker
-// 1 point = 0.0001 on 4 digit broker and 0.00001 on a 5 digit broker
+// 1 pip   = 0.0001 on a 4 digit broker and 0.00010 on a 5 digit broker
+// 1 point = 0.0001 on a 4 digit broker and 0.00001 on a 5 digit broker
      
 int GetP(){
    int output;
@@ -124,12 +145,24 @@ int GetYenAdjustFactor(){
    if(Digits == 3|| Digits == 2) output = 100;
    return(output);
 }
-  
+
 //+------------------------------------------------------------------+
-//| Position Sizing Algo                                             |
+//| Price to Pip Converter                                           |
 //+------------------------------------------------------------------+
-// Type: Customisable 
-// Modify this function to suit your trading robot
+// Type: Fixed Template 
+// Do not edit unless you know what you're doing
+
+// This function converts price difference to pips
+
+double PointToPip(double point){
+   return (point/(P*Point));
+}
+
+//+------------------------------------------------------------------+
+//| Position Sizing Algorithm                                        |
+//+------------------------------------------------------------------+
+// Type: Fixed Template 
+// Do not edit unless you know what you're doing
 
 // This function is our sizing algorithm
 
@@ -149,7 +182,7 @@ double GetLot(double STOP){
 }
 
 //+------------------------------------------------------------------+
-//| Check Lot                                                        |
+//| Check Lotsize                                                    |
 //+------------------------------------------------------------------+
 // Type: Fixed Template 
 // Do not edit unless you know what you're doing
@@ -159,29 +192,43 @@ double GetLot(double STOP){
 double CheckLot(double Lot){
 
    double LotToOpen=0;
+   
+   // Round it up to a lower nearest lot size that can be accepted by the broker
    LotToOpen=NormalizeDouble(Lot,2);
    LotToOpen=MathFloor(LotToOpen/MarketInfo(Symbol(),MODE_LOTSTEP))*MarketInfo(Symbol(),MODE_LOTSTEP);
-
-   if(LotToOpen<MarketInfo(Symbol(),MODE_MINLOT))LotToOpen=MarketInfo(Symbol(),MODE_MINLOT);
+   
+   // Check if lotsize is smaller than the minimum lotsize required
+   if(LotToOpen<MarketInfo(Symbol(),MODE_MINLOT)){
+      if (CaptProt) LotToOpen=0;
+      else LotToOpen=MarketInfo(Symbol(),MODE_MINLOT);
+   }
+   
+   // Check if lotsize is greater than the maximum lotsize allowed
    if(LotToOpen>MarketInfo(Symbol(),MODE_MAXLOT))LotToOpen=MarketInfo(Symbol(),MODE_MAXLOT);
    LotToOpen=NormalizeDouble(LotToOpen,2);
-
-   if(OnJournaling && LotToOpen!=Lot)Print("EA Journaling: Trading Lot has been changed by CheckLot function. "+
-                                           "Requested lot: "+(string)Lot+". Lot to open: "+(string)LotToOpen);
-
+   
+   // Journals the change, if any
+   if(OnJournaling && LotToOpen!=Lot){
+      Print("EA Journaling: Trading Lot has been changed by CheckLot function. "+
+            "Requested lot: "+(string)Lot+". Lot to open: "+(string)LotToOpen);
+      if(CaptProt && LotToOpen==0.00) 
+         Print("The lotsize calculated is smaller than the minimum lotsize required. "+
+               "Please increase the risk level or disable CaptProt should you wish to open the minimum lotsize regardless.");
+   }
+   
    return(LotToOpen);
 }
   
 //+------------------------------------------------------------------+
-// Crossing Initialise                                               |
+// Crossing Initialisation                                           |
 //+------------------------------------------------------------------+
-
 // Type: Fixed Template 
 // Do not edit unless you know what you're doing
 
 // This function initialises the Crossing Signal to store the variables
 
 void CrossInitialise(int arraysize){
+   ArrayResize(CrossTriggered,arraysize,0);
    ArrayResize(CurrentDirection,arraysize,0);
    ArrayResize(LastDirection   ,arraysize,0);
    ArrayResize(FirstTime       ,arraysize,0);
@@ -194,7 +241,6 @@ void CrossInitialise(int arraysize){
 //+------------------------------------------------------------------+
 // Crossing Signals                                                  |
 //+------------------------------------------------------------------+
-
 // Type: Fixed Template 
 // Do not edit unless you know what you're doing
 
@@ -213,7 +259,7 @@ int Crossed(int ID, double line1,double line2){
    if(FirstTime[ID]==true){ 
       FirstTime[ID]=false; // Change variable to false
       LastDirection[ID]=CurrentDirection[ID]; // Set new direction
-      return (0);
+      return (0); // No output
    }
    
    // If not the first time and there is a direction change
@@ -231,7 +277,8 @@ int Crossed(int ID, double line1,double line2){
 // Type: Fixed Template 
 // Do not edit unless you know what you're doing
 
-// This function counts number of positions/orders of OrderType TYPE
+// This function counts number of positions/orders of OrderType TYPE of the
+// same magic number
 
 int CountPosOrders(int TYPE, int magicnumberoffset=0){
    int Orders=0;
@@ -281,7 +328,10 @@ bool CloseOrderPosition(int TYPE, int magicnumberoffset=0){
    int ordersPos=OrdersTotal();
    Print("Running CloseOrderPosition...");
    for(int i=ordersPos-1; i>=0; i--){
-      // Note: Once pending orders become positions, OP_BUYLIMIT AND OP_BUYSTOP becomes OP_BUY, OP_SELLLIMIT and OP_SELLSTOP becomes OP_SELL
+      // Note: Once pending orders become positions, 
+      //       OP_BUYLIMIT  and OP_BUYSTOP  becomes OP_BUY, 
+      //       OP_SELLLIMIT and OP_SELLSTOP becomes OP_SELL
+      
       if(TYPE==OP_BUY || TYPE==OP_SELL){
          if(OrderSelect(i,SELECT_BY_POS,MODE_TRADES)==true &&
             OrderMagicNumber()==MagicNumber+magicnumberoffset && OrderType()==TYPE){
@@ -320,7 +370,7 @@ bool CloseOrderPosition(int TYPE, int magicnumberoffset=0){
 }
 
 //+------------------------------------------------------------------+
-//| Is Loss Limit Breached                                           |
+//| Loss Limit Checker                                               |
 //+------------------------------------------------------------------+
 // Type: Fixed Template 
 // Do not edit unless you know what you're doing
@@ -328,7 +378,6 @@ bool CloseOrderPosition(int TYPE, int magicnumberoffset=0){
 // This function determines if our maximum loss threshold is breached
 
 bool IsLossLimitBreached(int EntrySignalTrigger){
-
 
    static bool firstTick=False;
    static double initialCapital=0;

@@ -4,28 +4,45 @@
 //|                     Hidden TP/SL Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
-// TODO: Add dependancies comment notes to indicate the links between functions
-// TODO: Give a short description on each of the include files and how to use them
-// TODO: Break its dependency towards volatility and set it to accept custom-calculated TP/SL levels
+// This is the hidden TP/SL module for the SmartBYtes template. Suitable
+// for 1 SL/TP level only. Deprecated due to inflexibility for multiple
+// SL/TP levels. Left as a template and for simple strategies that only
+// use 1 SL/TP level/pipsize.
 
 #property copyright "Copyright 2016, SmartBYtes"
 #property strict
-#property version "1.00"
+#property version "1.01"
 #include <SBYtes/SBY_Main.mqh>
+
+/* 
+
+v1.00: 
+- Adapted from the Falcon template by Lucas Liew 
+  (https://github.com/Lucas170/The-Falcon), 
+  for hidden TP/SL settings
+
+v1.01:
+- Added new comments to describe what each template-
+  defined function does
+- Seperated volatility to SBY_VolTPSL.mqh
+
+
+TODO:
+- Able to use functions to create multiple TP/SL levels
+
+*/
 
 //+------------------------------------------------------------------+
 //| Setup                                                            |
 //+------------------------------------------------------------------+
 
-extern string  TPSLHidHeader="----------Hidden TP & SL Settings-----------";
+extern string  TPSLHidHeader="----------Hidden TP & SL Settings-----------"; //.
 
-extern bool    UseHiddenStopLoss=False;
-extern bool    IsVolatilityStopLossOn_Hidden=False;
-extern double  HardSLVariable_Hidden=0; // Stop Loss Amount/Pips
+extern bool    UseHiddenStopLoss=False;   // Hidden SL?
+extern double  HardSLVariable_Hidden=0;   // Stop Loss Pips
 
-extern bool    UseHiddenTakeProfit=False;
-extern bool    IsVolatilityTakeProfitOn_Hidden=False;
-extern double  HardTPVariable_Hidden=0; // Take Profit Amount/Pips
+extern bool    UseHiddenTakeProfit=False; // Hidden TP?
+extern double  HardTPVariable_Hidden=0;   // Take Profit Pips
 
 //----------Service Variables-----------//
 
@@ -54,13 +71,13 @@ Content:
 
 // This function calculates hidden stop loss amount and tags it to the appropriate order using an array
 
-void SetStopLossHidden(int OrderNum){ 
+void SetStopLossHidden(int OrderNum, bool customswitch=false, double customSLpips=0){ 
 
    if(UseHiddenStopLoss){
       double StopL;
    
-      if(!IsVolatilityStopLossOn_Hidden) StopL=HardSLVariable_Hidden; // If Volatility Stop Loss not activated. Stop Loss = Fixed Pips Stop Loss
-      else StopL=HardSLVariable_Hidden*myATR/(P*Point); // Stop Loss in Pips
+      StopL=HardSLVariable_Hidden; // Stop Loss = Fixed Pips Stop Loss
+      if(customswitch) StopL=customSLpips; // Stop Loss in Pips (custom)
    
       for(int x=0; x<ArrayRange(HiddenSLList,0); x++) { 
          // Number of elements in column 1
@@ -168,13 +185,13 @@ void TriggerStopLossHidden(){
 
 // This function calculates hidden take profit amount and tags it to the appropriate order using an array
 
-void SetTakeProfitHidden(int OrderNum){
+void SetTakeProfitHidden(int OrderNum, bool customswitch=false, double customTPpips=0){
 
    if(UseHiddenTakeProfit){
       double TakeP;
    
-      if(!IsVolatilityTakeProfitOn_Hidden) TakeP=HardTPVariable_Hidden; // If Volatility Take Profit not activated. Take Profit = Fixed Pips Take Profit
-      else TakeP=HardTPVariable_Hidden*myATR/(P*Point); // Take Profit in Pips
+      TakeP=HardTPVariable_Hidden; // Take Profit = Fixed Pips Take Profit
+      if(customswitch) TakeP=customTPpips; // Take Profit in Pips (custom)
    
       for(int x=0; x<ArrayRange(HiddenTPList,0); x++){ 
          // Number of elements in column 1

@@ -4,22 +4,33 @@
 //|         Volatility Trailing Stop Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
-// TODO: Add dependancies comment notes to indicate the links between functions
-// TODO: Give a short description on each of the include files and how to use them
-// TODO: Break its dependency towards volatility and set it to accept custom-calculated TP/SL levels
+// This is the volatility trailing stop module for the SmartBYtes 
+// template. 
 
 #property copyright "Copyright 2016, SmartBYtes"
 #property strict
-#property version "1.00"
+#property version "1.01"
 #include <SBYtes/SBY_Main.mqh>
+#include <SBYtes/SBY_VolGen.mqh>
+
+/* 
+
+v1.0: 
+- Adapted from the Falcon template by Lucas Liew 
+  (https://github.com/Lucas170/The-Falcon)
+  
+v1.01:
+- Added new comments to describe what each template-
+  defined function does
+*/
 
 //+------------------------------------------------------------------+
 //| Setup                                                            |
 //+------------------------------------------------------------------+
-extern string  VolTrailStopsHeader="----------Volatility Trailing Stops Settings-----------";
-extern bool    UseVolTrailingStops=False;
-extern double  VolTrailingDistMultiplier=0; // In units of ATR
-extern double  VolTrailingBuffMultiplier=0; // In units of ATR
+extern string  VolTrailStopsHeader="----------Volatility Trailing Stops Settings-----------"; //.
+extern bool    UseVolTrailingStops=False;    // Vol Trail Stops?
+extern double  VolTrailingDistMultiplier=0;  // Trail Distance ATR Multiplier
+extern double  VolTrailingBuffMultiplier=0;  // Trail Buffer ATR Multiplier
 
 //----------Service Variables-----------//
 
@@ -32,7 +43,10 @@ double VolTrailingList[][2]; // First dimension is for position ticket numbers, 
 /*
 
 Content:
-   1) 
+   1) InitialiseVolTrailStop
+   2) UpdateVolTrailingList
+   3) SetVolTrailingStop
+   4) ReviewVolTrailingStop
 
 */
 
