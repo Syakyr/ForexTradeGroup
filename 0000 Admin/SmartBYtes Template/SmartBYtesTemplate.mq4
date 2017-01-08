@@ -5,8 +5,8 @@
 //+------------------------------------------------------------------+
 
 #property copyright "Copyright 2017, SmartBYtes"
-#property version   "1.01"
-#property link      "https://github.com/Hitlaris/ForexTradeGroup"
+#property version   "1.02"
+#property link      "https://github.com/SmartBYtesSG/ForexTradeGroup"
 #include <SBYtes/SBY_Main.mqh> // Main include file
 
 /* 
@@ -21,6 +21,9 @@ v1.01:
 - Added new comments to describe what each template-
   defined function does
 - Rewritten to show MA crossover tutorial
+
+v1.02:
+- Changed the link
 
 */
 
