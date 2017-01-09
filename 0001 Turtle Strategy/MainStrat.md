@@ -18,3 +18,8 @@ Exit the long trade when closing price is equal to or crosses Donchian(10) lower
 Exit the short trade when closing price is equal to or crosses Donchian(10) upper bound from the bottom.
 ####SL 
 Exit trade when closing price travelled 1 ATR in the adverse direction.
+
+###PREFERRED TIMEFRAME
+None.
+###PREFERRED INSTRUMENT
+None.
