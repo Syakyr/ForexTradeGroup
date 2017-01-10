@@ -1,5 +1,6 @@
 #Strategy Title
 
+This is a fork of #[`strategy code`], Report #[`report code`]
 
 ##Main Instructions
  
