@@ -23,3 +23,5 @@ Exit trade when closing price travelled 1 ATR in the adverse direction.
 None.
 ###PREFERRED INSTRUMENT
 None.
+####Other Information
+"Donchian Channels.mql4" is to be installed in the Indicators folder for the strategy to run effectively.
