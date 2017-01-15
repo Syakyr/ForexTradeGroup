@@ -9,6 +9,7 @@ This is a fork of #[`strategy code`], Report #[`report code`]
 Insert long signal here
 ####Short
 Insert short signal here
+***
 
 ###EXIT RULES
 ####TP Long
@@ -19,6 +20,7 @@ Insert short TP signal here
 Insert long/short SL signal here
 ####Other Conditions
 Insert other signals here
+***
 
 ###OTHER PARAMETERS
 ####Preferred Timeframe
@@ -29,3 +31,7 @@ None.
 None.
 ####Other Information
 None.
+***
+
+##Ambiguous Variables to Test
+* 
