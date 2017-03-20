@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                     SBY_Main.mqh |
-//|                                       Copyright 2016, SmartBYtes |
+//|                                  Copyright 2016-2017, SmartBYtes |
 //|                             Main Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
@@ -8,9 +8,10 @@
 // included in any SmartBYtes Template files. It contains the essential
 // functions needed to make the template work.
 
-#property copyright "Copyright 2016, SmartBYtes"
+#property copyright "Copyright 2016-2017, SmartBYtes"
+#property version   "1.02"
+#property link      "https://github.com/AmadeusSG/ForexTradeGroup"
 #property strict
-#property version "1.01"
 
 /* 
 
@@ -28,6 +29,9 @@ v1.01:
   the minimum lots required by the broker so as to not
   exceed the risk level being set
 - Fixed the bug when using Crossed functions
+
+v1.02:
+- Changed the link
 
 TODO: Add email function
 */

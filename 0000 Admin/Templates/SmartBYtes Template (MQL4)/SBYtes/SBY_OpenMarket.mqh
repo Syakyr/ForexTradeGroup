@@ -1,15 +1,16 @@
 //+------------------------------------------------------------------+
 //|                                               SBY_OpenMarket.mqh |
-//|                                       Copyright 2016, SmartBYtes |
+//|                                  Copyright 2016-2017, SmartBYtes |
 //|               Open Market Orders Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
 // TODO: Add dependancies comment notes to indicate the links between functions
 // TODO: Give a short description on each of the include files and how to use them
 
-#property copyright "Copyright 2016, SmartBYtes"
+#property copyright "Copyright 2016-2017, SmartBYtes"
+#property version   "1.03"
+#property link      "https://github.com/AmadeusSG/ForexTradeGroup"
 #property strict
-#property version "1.01"
 #include <SBYtes/SBY_Main.mqh>
 
 /* 
@@ -22,6 +23,12 @@ v1.01:
 - Added new comments to describe what each template-
   defined function does
 
+v1.02:
+- Added link
+
+v1.03:
+- Seperates SetTPSL to SetTP and SetSL
+
 */
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32,8 +39,9 @@ v1.01:
 
 Content:
    1) SendOpenOrder
-   2) SetTPSL
-   3) OpenPositionMarket
+   2) SetTP
+   3) SetSL
+   4) OpenPositionMarket
 
 */
 
@@ -64,32 +72,17 @@ int SendOpenOrder (string symbol,
 }
 
 //+------------------------------------------------------------------+
-//| Set Fixed TP and SL                                              |
+//| Set Fixed TP                                                     |
 //+------------------------------------------------------------------+
 // Type: Fixed Template 
 // Do not edit unless you know what you're doing 
 
-// This function sets TP and SL. 
+// This function sets TP. 
 
-void SetTPSL(int TYPE, double initSL, double initTP, double SL, double TP){
+double SetTP(int TYPE, double initTP){
 
-   // Sets Take Profits and Stop Loss. Check against Stop Level Limitations.
-   if(TYPE==OP_BUY && initSL!=0){
-      SL=NormalizeDouble(Ask-initSL*P*Point,Digits);
-      if(Bid-SL<=MarketInfo(Symbol(),MODE_STOPLEVEL)*Point){
-         SL=NormalizeDouble(Bid-MarketInfo(Symbol(),MODE_STOPLEVEL)*Point,Digits);
-         if(OnJournaling)Print("EA Journaling: Stop Loss changed from "+(string)initSL+" to "+
-                               (string)(MarketInfo(Symbol(),MODE_STOPLEVEL)/P)+" pips");
-      }
-   }
-   if(TYPE==OP_SELL && initSL!=0){
-      SL=NormalizeDouble(Bid+initSL*P*Point,Digits);
-      if(SL-Ask<=MarketInfo(Symbol(),MODE_STOPLEVEL)*Point){
-         SL=NormalizeDouble(Ask+MarketInfo(Symbol(),MODE_STOPLEVEL)*Point,Digits);
-         if(OnJournaling)Print("EA Journaling: Stop Loss changed from "+(string)initSL+" to "+
-                               (string)(MarketInfo(Symbol(),MODE_STOPLEVEL)/P)+" pips");
-      }
-   }
+   // Sets Take Profits. Check against Stop Level Limitations.
+   double TP = 0;
    if(TYPE==OP_BUY && initTP!=0){
       TP=NormalizeDouble(Ask+initTP*P*Point,Digits);
       if(TP-Bid<=MarketInfo(Symbol(),MODE_STOPLEVEL)*Point){
@@ -106,6 +99,38 @@ void SetTPSL(int TYPE, double initSL, double initTP, double SL, double TP){
                                (string)(MarketInfo(Symbol(),MODE_STOPLEVEL)/P)+" pips");
       }
    }
+   return TP;
+}
+
+//+------------------------------------------------------------------+
+//| Set Fixed SL                                                     |
+//+------------------------------------------------------------------+
+// Type: Fixed Template 
+// Do not edit unless you know what you're doing 
+
+// This function sets SL. 
+
+double SetSL(int TYPE, double initSL){
+
+   // Sets Stop Loss. Check against Stop Level Limitations.
+   double SL = 0;
+   if(TYPE==OP_BUY && initSL!=0){
+      SL=NormalizeDouble(Ask-initSL*P*Point,Digits);
+      if(Bid-SL<=MarketInfo(Symbol(),MODE_STOPLEVEL)*Point){
+         SL=NormalizeDouble(Bid-MarketInfo(Symbol(),MODE_STOPLEVEL)*Point,Digits);
+         if(OnJournaling)Print("EA Journaling: Stop Loss changed from "+(string)initSL+" to "+
+                               (string)(MarketInfo(Symbol(),MODE_STOPLEVEL)/P)+" pips");
+      }
+   }
+   if(TYPE==OP_SELL && initSL!=0){
+      SL=NormalizeDouble(Bid+initSL*P*Point,Digits);
+      if(SL-Ask<=MarketInfo(Symbol(),MODE_STOPLEVEL)*Point){
+         SL=NormalizeDouble(Ask+MarketInfo(Symbol(),MODE_STOPLEVEL)*Point,Digits);
+         if(OnJournaling)Print("EA Journaling: Stop Loss changed from "+(string)initSL+" to "+
+                               (string)(MarketInfo(Symbol(),MODE_STOPLEVEL)/P)+" pips");
+      }
+   }
+   return SL;
 }
 
 //+------------------------------------------------------------------+
@@ -142,7 +167,8 @@ int OpenPositionMarket(int TYPE, double SL, double TP, int magicnumberoffset=0, 
       while(tries<MaxRetriesPerTick){ // Edits stops and take profits before the market order is placed
          RefreshRates();
          if(TYPE==OP_BUY) price=Ask; if(TYPE==OP_SELL) price=Bid;
-         SetTPSL(TYPE,initSL,initTP,SL,TP);
+         takeprofit = SetTP(TYPE,initTP);
+         stoploss = SetSL(TYPE,initSL);
          Ticket = SendOpenOrder(symbol,cmd,volume,price,slippage,stoploss,takeprofit,comment,magic,expiration,arrow_color);
          if(Ticket>0) break;
          tries++;
@@ -152,7 +178,8 @@ int OpenPositionMarket(int TYPE, double SL, double TP, int magicnumberoffset=0, 
       if(TYPE==OP_BUY)price=Ask;if(TYPE==OP_SELL)price=Bid;
       Ticket = SendOpenOrder(symbol,cmd,volume,price,slippage,0,0,comment,magic,expiration,arrow_color);
       if(Ticket>0 && OrderSelect(Ticket,SELECT_BY_TICKET)==true && (SL!=0 || TP!=0)){
-         SetTPSL(TYPE,initSL,initTP,SL,TP);
+         takeprofit = SetTP(TYPE,initTP);
+         stoploss = SetSL(TYPE,initSL);
          bool ModifyOpen=false;
          while(!ModifyOpen){
             HandleTradingEnvironment();
