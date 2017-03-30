@@ -1,12 +1,13 @@
 //+------------------------------------------------------------------+
-//|                                     SmartBYtes EA Template v1.01 |
-//|                                       Copyright 2017, SmartBYtes |
+//|                                           SmartBYtes EA Template |
+//|                                  Copyright 2016-2017, SmartBYtes |
 //|                                                                  |
 //+------------------------------------------------------------------+
 
-#property copyright "Copyright 2017, SmartBYtes"
+#property copyright "Copyright 2016-2017, SmartBYtes"
 #property version   "1.02"
-#property link      "https://github.com/SmartBYtesSG/ForexTradeGroup"
+#property link      "https://github.com/AmadeusSG/ForexTradeGroup"
+#property strict
 #include <SBYtes/SBY_Main.mqh> // Main include file
 
 /* 
