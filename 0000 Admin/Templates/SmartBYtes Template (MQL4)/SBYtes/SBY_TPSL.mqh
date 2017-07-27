@@ -74,4 +74,5 @@ void InitialiseHardTPSL(){
 
    if(UseFixedTakeProfit==False) Take=0;
    else Take=HardTPVariable;
+   
 }

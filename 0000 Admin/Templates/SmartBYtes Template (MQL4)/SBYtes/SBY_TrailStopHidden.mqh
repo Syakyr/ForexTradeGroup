@@ -1,14 +1,15 @@
 //+------------------------------------------------------------------+
 //|                                          SBY_TrailStopHidden.mqh |
-//|                                       Copyright 2016, SmartBYtes |
+//|                                  Copyright 2016-2017, SmartBYtes |
 //|             Hidden Trailing Stop Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
 // This is the hidden trailing stop module for the SmartBYtes template. 
 
-#property copyright "Copyright 2016, SmartBYtes"
+#property copyright "Copyright 2016-2017, SmartBYtes"
+#property version   "1.02"
+#property link      "https://github.com/AmadeusSG/ForexTradeGroup"
 #property strict
-#property version "1.01"
 #include <SBYtes/SBY_Main.mqh>
 
 /* 
@@ -20,6 +21,9 @@ v1.0:
 v1.01:
 - Added new comments to describe what each template-
   defined function does
+
+v1.02:
+- Added link
 
 */
 

@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                            SBY_VolTPSLHidden.mqh |
-//|                                       Copyright 2016, SmartBYtes |
+//|                                  Copyright 2016-2017, SmartBYtes |
 //|          Hidden Volatility TP/SL Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
@@ -9,9 +9,10 @@
 // multiple SL/TP levels. Left as a template and for simple strategies 
 // that only use 1 SL/TP level/pipsize.
 
-#property copyright "Copyright 2016, SmartBYtes"
+#property copyright "Copyright 2016-2017, SmartBYtes"
+#property version   "1.02"
+#property link      "https://github.com/AmadeusSG/ForexTradeGroup"
 #property strict
-#property version "1.00"
 #include <SBYtes/SBY_Main.mqh>
 #include <SBYtes/SBY_TPSLHidden.mqh>
 #include <SBYtes/SBY_VolGen.mqh>
@@ -25,6 +26,9 @@ v1.00:
 
 v1.01:
 - Branched off from TPSLHidden module
+
+v1.02:
+- Added link
 
 TODO:
 - Able to use functions to create multiple TP/SL levels

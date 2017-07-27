@@ -8,7 +8,7 @@
 // TODO: Give a short description on each of the include files and how to use them
 
 #property copyright "Copyright 2016-2017, SmartBYtes"
-#property version   "1.03"
+#property version   "1.02"
 #property link      "https://github.com/AmadeusSG/ForexTradeGroup"
 #property strict
 #include <SBYtes/SBY_Main.mqh>
@@ -26,9 +26,6 @@ v1.01:
 v1.02:
 - Added link
 
-v1.03:
-- Seperates SetTPSL to SetTP and SetSL
-
 */
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -39,9 +36,8 @@ v1.03:
 
 Content:
    1) SendOpenOrder
-   2) SetTP
-   3) SetSL
-   4) OpenPositionMarket
+   2) SetTPSL
+   3) OpenPositionMarket
 
 */
 
@@ -79,10 +75,9 @@ int SendOpenOrder (string symbol,
 
 // This function sets TP. 
 
-double SetTP(int TYPE, double initTP){
+double SetTP(int TYPE, double initTP, double TP){
 
    // Sets Take Profits. Check against Stop Level Limitations.
-   double TP = 0;
    if(TYPE==OP_BUY && initTP!=0){
       TP=NormalizeDouble(Ask+initTP*P*Point,Digits);
       if(TP-Bid<=MarketInfo(Symbol(),MODE_STOPLEVEL)*Point){
@@ -99,7 +94,7 @@ double SetTP(int TYPE, double initTP){
                                (string)(MarketInfo(Symbol(),MODE_STOPLEVEL)/P)+" pips");
       }
    }
-   return TP;
+   return(TP);
 }
 
 //+------------------------------------------------------------------+
@@ -110,10 +105,9 @@ double SetTP(int TYPE, double initTP){
 
 // This function sets SL. 
 
-double SetSL(int TYPE, double initSL){
+double SetSL(int TYPE, double initSL, double SL){
 
    // Sets Stop Loss. Check against Stop Level Limitations.
-   double SL = 0;
    if(TYPE==OP_BUY && initSL!=0){
       SL=NormalizeDouble(Ask-initSL*P*Point,Digits);
       if(Bid-SL<=MarketInfo(Symbol(),MODE_STOPLEVEL)*Point){
@@ -130,7 +124,7 @@ double SetSL(int TYPE, double initSL){
                                (string)(MarketInfo(Symbol(),MODE_STOPLEVEL)/P)+" pips");
       }
    }
-   return SL;
+   return(SL);
 }
 
 //+------------------------------------------------------------------+
@@ -163,12 +157,14 @@ int OpenPositionMarket(int TYPE, double SL, double TP, int magicnumberoffset=0, 
    double initSL = SL;
    int Ticket=-1;
    double price=0;
+
    if(!IsECNbroker){
       while(tries<MaxRetriesPerTick){ // Edits stops and take profits before the market order is placed
          RefreshRates();
          if(TYPE==OP_BUY) price=Ask; if(TYPE==OP_SELL) price=Bid;
-         takeprofit = SetTP(TYPE,initTP);
-         stoploss = SetSL(TYPE,initSL);
+         stoploss    = SetSL(TYPE,initSL,stoploss);
+         takeprofit  = SetTP(TYPE,initTP,takeprofit);
+
          Ticket = SendOpenOrder(symbol,cmd,volume,price,slippage,stoploss,takeprofit,comment,magic,expiration,arrow_color);
          if(Ticket>0) break;
          tries++;
@@ -178,8 +174,8 @@ int OpenPositionMarket(int TYPE, double SL, double TP, int magicnumberoffset=0, 
       if(TYPE==OP_BUY)price=Ask;if(TYPE==OP_SELL)price=Bid;
       Ticket = SendOpenOrder(symbol,cmd,volume,price,slippage,0,0,comment,magic,expiration,arrow_color);
       if(Ticket>0 && OrderSelect(Ticket,SELECT_BY_TICKET)==true && (SL!=0 || TP!=0)){
-         takeprofit = SetTP(TYPE,initTP);
-         stoploss = SetSL(TYPE,initSL);
+         stoploss    = SetSL(TYPE,initSL,stoploss);
+         takeprofit  = SetTP(TYPE,initTP,takeprofit);
          bool ModifyOpen=false;
          while(!ModifyOpen){
             HandleTradingEnvironment();

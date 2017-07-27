@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                                   SBY_VolGen.mqh |
-//|                                       Copyright 2016, SmartBYtes |
+//|                                  Copyright 2016-2017, SmartBYtes |
 //|     General Volatility Variables Library for SmartBYtes Template |
 //+------------------------------------------------------------------+
 
@@ -8,9 +8,10 @@
 // It must be included in any SmartBYtes Template files if volatility
 // is used.
 
-#property copyright "Copyright 2016, SmartBYtes"
+#property copyright "Copyright 2016-2017, SmartBYtes"
+#property version   "1.02"
+#property link      "https://github.com/AmadeusSG/ForexTradeGroup"
 #property strict
-#property version "1.01"
 #include <SBYtes/SBY_Main.mqh>
 
 /* 
@@ -22,6 +23,9 @@ v1.0:
 v1.01:
 - Added new comments to describe what each template-
   defined function does
+
+v1.02:
+- Added link
 
 */
 
